@@ -65,9 +65,9 @@
     #'(lambda (cd) (equal (getf cd :title) title)))
 
 
-; so let's do it the right way, starting from a new primitive we're learning
+; so let's do it the righter way, starting from a new primitive we're learning
 ; a new way to do it where we use kwargs and select on filter on all that are provided
-(defun where (&key title artist rating (ripped nil ripped-p))
+(defun where-non-macro (&key title artist rating (ripped nil ripped-p))
     #'(lambda (cd)
         (and
             (if title    (equal (getf cd :title)  title)  t)
@@ -88,8 +88,8 @@
             row) *db*)))
 
 (defun delete-rows (selector-fn)
-    (setf *db* (remove-if selector-fn *db)))
-    
+    (setf *db* (remove-if selector-fn *db*)))
+
 
 ;; LEARNING
 
@@ -112,6 +112,35 @@
 ; Break 1 [15]> (foo2 :c 100)
 ; (10 20 100 T)
 
+(defun make-comparison-expr-broken (field value)
+    (list 'equal (list 'getf 'cd field) value))
+
+; Break 4 [5]> (make-comparison-expr-broken :rating 10)
+; (EQUAL (GETF CD :RATING) 10)
+
+(defun make-comparison-list (fields)
+    (loop while fields
+        collecting (make-comparison-expr (pop fields) (pop fields))))
+
+
+;; ` takes the literal string as an argument
+;; , inside of a ` goes back to interpretation
+; Break 3 [4]> `(1 2 3)
+; (1 2 3)
+; Break 3 [4]> '(1 2 3)
+; (1 2 3)
+; Break 3 [4]> `(1 2 (+ 1 2))
+; (1 2 (+ 1 2))
+; Break 3 [4]> `(1 2 ,(+ 1 2))
+; (1 2 3)
+
+;; using , we can make it work by prepending appropriately and evaluating the value of field/value
+
+(defun make-comparison-expr (field value)
+    `(equal (getf cd ,field) ,value))
+
+; Break 4 [5]> (make-comparison-expr :rating 10)
+; (EQUAL (GETF CD :RATING) 10)
 
 
 
