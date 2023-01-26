@@ -5,6 +5,7 @@
 ; keyword symbols--symbols whose names start with :
 
 ;; "special operators" like (if) can do things that user-defined functions cannot do. there's 25 if-like special operators in lisp
+
 ;; ' is syntactic sugar for (quote)
 ; [1]> (quote (1 2))
 ; (1 2)

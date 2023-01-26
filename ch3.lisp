@@ -112,15 +112,15 @@
 ; Break 1 [15]> (foo2 :c 100)
 ; (10 20 100 T)
 
+
+
+;;;; MACROS
+
 (defun make-comparison-expr-broken (field value)
     (list 'equal (list 'getf 'cd field) value))
 
 ; Break 4 [5]> (make-comparison-expr-broken :rating 10)
 ; (EQUAL (GETF CD :RATING) 10)
-
-(defun make-comparison-list (fields)
-    (loop while fields
-        collecting (make-comparison-expr (pop fields) (pop fields))))
 
 
 ;; ` takes the literal string as an argument
@@ -141,6 +141,31 @@
 
 ; Break 4 [5]> (make-comparison-expr :rating 10)
 ; (EQUAL (GETF CD :RATING) 10)
+
+
+(defun make-comparison-list (fields)
+    (loop while fields
+        collecting (make-comparison-expr (pop fields) (pop fields))))
+
+;; difference between , and ,@
+;; , takes the resulting literal eval with ()
+;; @ paired with , takes the resulting literal eval *results* (book calls this splicing)
+;; in my mind, this is the way to return an actual value as opposed to an expression?
+
+; Break 4 [5]> `(and ,(list 1 2 3))
+; (AND (1 2 3))
+; Break 4 [5]> `(and ,@(list 1 2 3))
+; (AND 1 2 3)
+
+;; using this is magic, this basically expands to become the function that is (where-non-macro)
+(defmacro where (&rest clauses)
+    `#'(lambda (cd) (and ,@(make-comparison-list clauses))))
+
+; Break 6 [7]> (where :title "The Chronic")
+; #<FUNCTION :LAMBDA (CD) (AND (EQUAL (GETF CD :TITLE) "The Chronic"))>
+; Break 6 [7]> (select (where :title "The Chronic"))
+; ((:TITLE "The Chronic" :ARTIST "Dr Dre" :RATING 10 :RIPPED NIL))
+
 
 
 
